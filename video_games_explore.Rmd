@@ -503,7 +503,7 @@ myPalette = getPalette(colourCount)
 
 # plot scatterplot of Mario games year of release vs Global Sales
 p <- ggplot(aes(x=Year_of_Release, y=Global_Sales), data=mario) + 
-  geom_point(aes(text=Name, color=Genre, size=2, alpha=0.5)) + 
+  geom_point(aes(text=Name, color=Genre), size=3, alpha=0.75) +  
   geom_line(aes(x=Year_of_Release, y=mean_sales), 
             data=df.by_year, alpha=0.5, linetype = 'dashed') + 
   scale_x_continuous(limits=c(2001, 2016)) + 
@@ -529,7 +529,7 @@ myPalette = getPalette(colourCount)
 
 # plot scatterplot of Final Fantasy games year of release vs Global Sales
 p <- ggplot(aes(x=Year_of_Release, y=Global_Sales), data=ff) + 
-  geom_point(aes(text=Name, color=Platform, size=2, alpha=0.5)) + 
+  geom_point(aes(text=Name, color=Platform), size=3, alpha=0.75) + 
   geom_line(aes(x=Year_of_Release, y=mean_sales), 
             data=df.by_year, alpha=0.5, linetype = 'dashed') + 
   scale_x_continuous(limits=c(1997, 2016)) + 
@@ -755,7 +755,7 @@ myPalette = getPalette(colourCount)
 
 # plot scatterplot of Mario games year of release vs Global Sales
 p <- ggplot(aes(x=Year_of_Release, y=Global_Sales), data=mario) + 
-  geom_point(aes(text=Name, color=Genre, size=2, alpha=0.5)) + 
+  geom_point(aes(text=Name, color=Genre), size=3, alpha=0.75) +  
   geom_line(aes(x=Year_of_Release, y=mean_sales), 
             data=df.by_year, alpha=0.5, linetype = 'dashed') + 
   scale_x_continuous(limits=c(2001, 2016)) + 
