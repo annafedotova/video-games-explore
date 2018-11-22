@@ -3,6 +3,9 @@ Video Games Exploration by Anna Fedotova
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
 # Loading the packages
+knitr::opts_chunk$set(fig.width=9,fig.height=5,fig.path='Figs/',
+                      fig.align='center',tidy=TRUE,
+                      echo=FALSE,warning=FALSE,message=FALSE)
 library(ggplot2)
 library(grid)
 library(gridExtra)
@@ -28,6 +31,7 @@ It is a combination of data obtained from [web scrape of VGChartz Video Games Sa
 The dataset has 16719 observations and 16 variables:
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# check dataset dimensions
 dim(df)
 ```
 
@@ -35,12 +39,14 @@ Let's make the summary of the data to see if there are any missing values.
 
 
 ```{r echo=FALSE, Univariate_Plots}
+# get summary of all variables
 summary(df)
 ```
 
 There are some missing values in Critic_Score, Critic_Count, User_Score and User_Count. Let's remove the rows with the missing values.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# remove entries with missing Critic Score, User Count and User Score
 df <- subset(df, !is.na(Critic_Score))
 df <- subset(df, !is.na(User_Count))
 df <- subset(df, !is.na(User_Score))
@@ -50,19 +56,23 @@ summary(df)
 Let's check the data types of the columns to make sure they are correct.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# check data types
 str(df)
 ```
 
 User Score and Year of Release are factors and should be converted to numeric.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# check for NA values in year of release
 levels(df$Year_of_Release)
 ```
 
 There are also some missing values in the Year of Release. Let's remove those values and then convert User Score and Year of Release to numeric data type.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# chage user score to numeric
 df$User_Score <- as.numeric(df$User_Score)
+# remove entries with NA year of release and change year of release to numeric
 df <- subset(df, Year_of_Release != 'N/A')
 df$Year_of_Release <- as.numeric(as.character(df$Year_of_Release))
 
@@ -77,11 +87,13 @@ Let's look at the distributions of some of the variables.
 **Distribution of Global Sales**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot histogram of Global Sales
 ggplot(aes(x=Global_Sales), data=df) + geom_histogram()
 ```
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot histogram of Global Sales applying log10 scale
 ggplot(aes(x=Global_Sales), data=df) + geom_histogram() + 
   scale_x_log10()
 ```
@@ -93,16 +105,17 @@ Let's look at the sales distribution by region.
 **Global Sales by Region**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot histogram of sales split by region
 p1 <- ggplot(aes(x=NA_Sales), data=df) + geom_histogram() + 
-  scale_x_log10()
+  scale_x_log10() + xlab("North American Sales - log10 (million of units)")
 p2 <- ggplot(aes(x=EU_Sales), data=df) + geom_histogram() + 
-  scale_x_log10()
+  scale_x_log10() + xlab("European Sales - log10 (million of units)")
 p3 <- ggplot(aes(x=JP_Sales), data=df) + geom_histogram() + 
-  scale_x_log10()
+  scale_x_log10() + xlab("Japanese Sales - log10 (million of units)")
 p4 <- ggplot(aes(x=Other_Sales), data=df) + geom_histogram() + 
-  scale_x_log10()
+  scale_x_log10() + xlab("Other Sales - log10 (million of units)")
 p5 <- ggplot(aes(x=Global_Sales), data=df) + geom_histogram() + 
-  scale_x_log10()
+  scale_x_log10() + xlab("Global Sales - log10 (million of units)")
 
 grid.arrange(p1, p2, p3, p4, p5)
 ```
@@ -115,12 +128,14 @@ Another observation is that many games have sales close to 0 in the markets outs
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot number of games released per year and corresponding median sales
 p1 <- ggplot(aes(x=Year_of_Release), data=df) + geom_bar() +
   scale_x_continuous(breaks=seq(1985, 2015, 5))
 
 p2 <- ggplot(aes(x=Year_of_Release, y=Global_Sales), data=df) + 
   geom_bar(stat='summary', fun.y = median) +
-  scale_x_continuous(breaks=seq(1985, 2015, 5))
+  scale_x_continuous(breaks=seq(1985, 2015, 5)) + 
+  ylab("Global Sales (million of units)")
 
 grid.arrange(p1, p2)
 ```
@@ -131,9 +146,11 @@ Most of the games in the dataset were released between 2000 and 2015. However, g
 **Distribution by Genre**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot number of games and median sales per genre 
 p1 <- ggplot(aes(x=Genre), data=df) + geom_bar()
 p2 <- ggplot(aes(x=Genre, y=Global_Sales), data=df) + 
-  geom_bar(stat='summary', fun.y = median)
+  geom_bar(stat='summary', fun.y = median) + 
+  ylab("Median Sales (million of units)")
 
 grid.arrange(p1, p2)
 ```
@@ -144,15 +161,18 @@ In terms of sales the most popular genres are Sports and Miscellaneous, followed
 **Distribution by Platform**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# add manufacturer variable based on platfrom name
 df$Manufacturer <- ifelse(df$Platform %in% c('3DS', 'DS', 'GBA', 'GC', 'Wii', 'WiiU'), 'Nintendo', ifelse(df$Platform %in% c('PS', 'PS2', 'PS3', 'PS4', 'PSP', 'PSV'), 'Sony', ifelse(df$Platform %in% c('X360', 'XB', 'XOne'), 'Microsoft', 'Other')))
 
 df$Manufacturer <- factor(df$Manufacturer)
 
+# plot number of games and median sales per platform
 p1 <- ggplot(aes(x=Platform, fill=Manufacturer), data=df) + geom_bar() + 
   scale_fill_brewer(palette='Set2')
 p2 <- ggplot(aes(x=Platform, y=Global_Sales, fill=Manufacturer), data=df) + 
   geom_bar(stat='summary', fun.y = median) + 
-  scale_fill_brewer(palette='Set2')
+  scale_fill_brewer(palette='Set2') + 
+  ylab("Median Sales (million of units)")
 
 grid.arrange(p1, p2)
 ```
@@ -168,7 +188,10 @@ Let's look at the top Publishers and Developers in terms of total sales and see 
 **Top 5 game publishers in terms of total Global Sales**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# add a new variable Bestseller to classify games with more than 1 million sales
 df$Bestseller <- ifelse(df$Global_Sales >= 1, 1, 0)
+
+# group data by publisher and find top 5 with highest sales
 by_pub <- group_by(df, Publisher)
 
 df.by_pub <- summarise(by_pub,
@@ -187,6 +210,7 @@ The biggest game Publishers are Electronic Arts and Nintendo, each having sold m
 **Top 5 game developers in terms of total Global Sales**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# group data by developer and find top 5 with highest sales
 by_dev <- group_by(df, Developer)
 df.by_dev <- summarise(by_dev, 
                        total_sales = sum(Global_Sales),
@@ -205,6 +229,7 @@ Top developers are Nintendo and Electronic Arts (EA Sports and EA Canada are bot
  Let's analyse the distribution of Critic Scores and User Scores.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot histogram of Critic Score and User Score distributions
 p1 <- hist(df$User_Score)
 p2 <- hist(df$Critic_Score)
 plot(p1, col=rgb(0,0,1,1/4), 
@@ -218,12 +243,14 @@ legend('topleft', legend=c('User Score', 'Critic Score'),
 **Critic Score Summary**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# get summary on Critic Score
 summary(df$Critic_Score)
 ```
 
 **User Score Summary**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# get summary on User Score
 summary(df$User_Score)
 ```
 
@@ -273,13 +300,15 @@ In this section we will analyse more in detail possible relationships that can e
 ## Relationship between Games Genre and Sales
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot boxplots of global sales distribution by genre
 ggplot(aes(x=Genre, y=Global_Sales), data=df) + geom_boxplot() + 
-  scale_y_log10()
+  scale_y_log10() + ylab("Global Sales (million of units)")
 ```
 
 As we saw in the previous section, some genres have higher global sales than others. We can also see that some genres are prone to more variance (for example Simulation), whereas others are less widespread (Adventure).
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# get summary of global sales by genre
 tapply(df$Global_Sales, df$Genre, summary)
 ```
 
@@ -290,19 +319,22 @@ Let's see whether genre preferences stay the same if we split the sales data by 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot boxplots of NA sales distribution by genre
 ggplot(aes(x=Genre, y=NA_Sales), data=df) + geom_boxplot() + 
-  scale_y_log10()
+  scale_y_log10() + ylab("North American Sales (million of units)")
 ```
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot boxplots of EU sales distribution by genre
 ggplot(aes(x=Genre, y=EU_Sales), data=df) + geom_boxplot() + 
-  scale_y_log10()
+  scale_y_log10() + ylab("European Sales (million of units)")
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot boxplots of JP sales distribution by genre
 ggplot(aes(x=Genre, y=JP_Sales), data=df) + geom_boxplot() + 
-  scale_y_log10()
+  scale_y_log10() + ylab("Japanese Sales (million of units)")
 ```
 
 Whereas North American and European markets are somewhat similar in terms of best selling genres, Japanese market seems to show different tendencies. The most selling game genres are Role-Playing and Puzzle, whereas the worst selling ones are Racing, Sports, Strategy and Shooter. 
@@ -312,18 +344,21 @@ Let's look at the top selling titles per region.
 **Top 5 most sold titles in North America**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# get top 5 titles in terms of NA sales
 arrange(df,desc(NA_Sales))[c(1:5),c(1,4,6,10)]
 ```
 
 **Top 5 most sold titles in Europe**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# get top 5 titles in terms of EU sales
 arrange(df,desc(EU_Sales))[c(1:5),c(1,4,7,10)]
 ```
 
 **Top 5 most sold titles in Japan**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# get top 5 titles in terms of JP sales
 arrange(df,desc(JP_Sales))[c(1:5),c(1,4,8,10)]
 ```
 
@@ -333,6 +368,7 @@ While the top titles in the US and Europe are almost the same, Japan has a very 
 What about acceptance by critics and user by genre?
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot boxplots of Global Sales, Critic Score and User Score distributions by genre
 p1 <- ggplot(aes(x=Genre, y=Global_Sales), data=df) + geom_boxplot() + 
   scale_y_log10(limits = c(0.1,5))
 p2 <- ggplot(aes(x=Genre, y=Critic_Score), data=df) + geom_boxplot() + scale_y_continuous(limits = c(50,90))
@@ -348,6 +384,7 @@ It looks like the genres preferred by Critics and Users are not necessarily the 
 **Proportion of bestsellers per genre**
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# group data by genre and calculate bestseller proportion by genre
 by_genre <- group_by(df, Genre)
 df.by_genre <- summarise(by_genre, 
                        total_sales = sum(Global_Sales),
@@ -367,20 +404,24 @@ Top genres with the highest proportion of bestsellers are mostly inline with the
 There seems to be a positive correlation between Critic Score and Global Sales. The relationship is not exactly linear, there seems to be a slight explonential curve. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot scatterplot of Critic Score vs Global Sales
 ggplot(aes(x=Critic_Score, y=Global_Sales), data=df) + geom_jitter(alpha=0.25) +
-  scale_y_log10() + geom_smooth()
+  scale_y_log10() + geom_smooth() + ylab("Global Sales (million of units)")
 ```
 
 The relationship between User Score and Global Sales is also slightly positive, although much less pronounced than the relationship between Critic Score and Global Sales.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot scatterplot of User Score vs Global Sales
 ggplot(aes(x=User_Score, y=Global_Sales), data=df) + geom_jitter(alpha=0.25) +
-  scale_y_log10() + geom_smooth()
+  scale_y_log10() + geom_smooth() + ylab("Global Sales (million of units)")
 ```
 
 Let's calculate Pearson correlation coefficient for Critic Score, User Score and Global Sales.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# calculate Pearson correlation coefficient for 
+# Global Sales, Critic Score and User Score
 res <- cor(df[, c(10, 11, 13)])
 round(res, 2)
 ```
@@ -390,6 +431,7 @@ As concluded earlier from the scatterplots, Critic Score has higher correlation 
 What is more, Critic Score and User Score seem to be positively correlated with one another (0.58), so User Score should probably be removed from the model to avoid multicollinearity.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot scatterplot of User Score vs Critic Score
 ggplot(aes(x=User_Score, y=Critic_Score), data=df) + 
   geom_jitter(alpha=0.25) + geom_smooth(method='lm')
 ```
@@ -397,12 +439,14 @@ ggplot(aes(x=User_Score, y=Critic_Score), data=df) +
 Let's looking at the distribution of Critic Scores depending on whether the game is a bestseller ot not.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot boxplots of Critic Score distribution for bestseller and non-bestseller games
 ggplot(aes(x=as.factor(df$Bestseller), y=Critic_Score), data=df) + 
   geom_boxplot() + 
   labs(x = 'Bestseller')
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# get summary of Critic Score distribution for bestseller and non-bestseller games
 tapply(df$Critic_Score, df$Bestseller, summary)
 ```
 
@@ -439,6 +483,7 @@ We can suppose that companies that are creating games are gradually becoming bet
 Another possible assumptions is that if a game became a bestseller, making use of the same franchise can be a factor for success, since users are already familiar with the brand and are more likely to buy the game if they liked the previous one of the serie.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# group data by year and calculate mean and median sales per game per year
 by_year <- group_by(df, Year_of_Release)
 df.by_year <- summarise(by_year, 
                        mean_sales = mean(Global_Sales),
@@ -446,34 +491,53 @@ df.by_year <- summarise(by_year,
 ```
 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=7}
+# create dataset including all Mario games
 mario <- dplyr::filter(df, grepl("Mario", df$Name))
 
+# generate color palette
+colourCount = length(unique(mario$Genre))
+getPalette = colorRampPalette(brewer.pal(9, 'Dark2'))
+myPalette = getPalette(colourCount)
+
+
+# plot scatterplot of Mario games year of release vs Global Sales
 p <- ggplot(aes(x=Year_of_Release, y=Global_Sales), data=mario) + 
-  geom_point(aes(text=Name, color=Genre, size=Critic_Score, alpha=0.5)) + 
+  geom_point(aes(text=Name, color=Genre, size=2, alpha=0.5)) + 
   geom_line(aes(x=Year_of_Release, y=mean_sales), 
             data=df.by_year, alpha=0.5, linetype = 'dashed') + 
   scale_x_continuous(limits=c(2001, 2016)) + 
   scale_y_log10() + 
   ggtitle('Super Mario Franchise Evolution') + 
-  theme(legend.title=element_blank())
+  theme(legend.title=element_blank()) + 
+  ylab("Global Sales (million of units)") + 
+  scale_colour_manual(values = myPalette)
 
 ggplotly(p)
 ```
 
 Mario Franchise was definitely a big success, with most of the released games gaining more than average global sales. What is curious though, is the original series and genres of the game, Super Mario series (Platform) and Mario Kart series (Racing), proved to be much more popular than the subsequent attempts to bring the franchise into other genres, like Sports, Puzzle or Role-Playing.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=7}
+# create dataset including all Final Fantasy games
 ff <- dplyr::filter(df, grepl("Final Fantasy", df$Name))
 
+# generate color palette
+colourCount = length(unique(ff$Platform))
+getPalette = colorRampPalette(brewer.pal(9, 'Set1'))
+myPalette = getPalette(colourCount)
+
+# plot scatterplot of Final Fantasy games year of release vs Global Sales
 p <- ggplot(aes(x=Year_of_Release, y=Global_Sales), data=ff) + 
-  geom_point(aes(text=Name, color=Platform, size=Critic_Score, alpha=0.5)) + 
+  geom_point(aes(text=Name, color=Platform, size=2, alpha=0.5)) + 
   geom_line(aes(x=Year_of_Release, y=mean_sales), 
             data=df.by_year, alpha=0.5, linetype = 'dashed') + 
   scale_x_continuous(limits=c(1997, 2016)) + 
   scale_y_log10() + 
   ggtitle('Final Fantasy Saga Evolution') + 
-  theme(legend.title=element_blank())
+  theme(legend.title=element_blank()) + 
+  ylab("Global Sales (million of units)") + 
+  scale_colour_manual(values = myPalette)
 
 ggplotly(p)
 ```
@@ -485,6 +549,7 @@ Final Fantasy Saga is a good example of the fact that brand name and a high qual
 In the Final Fantasy Saga evolution, we can see that certain platforms appear and disappear with time. Let's have a closer look at this relationship.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# plot line charts of games per platform per year of release
 p <- ggplot(aes(x = Year_of_Release, color=Platform), data=df) + 
   geom_line(stat='count') + facet_wrap(~Manufacturer)
 
@@ -534,6 +599,7 @@ We see that there are a number of statistically significant predictor variables,
 Now let's check our model for multicollinearity using VIF to make sure we don't have variables that are highly correlated with each other.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# calculate VIF
 vif(model1)
 ```
 
@@ -564,7 +630,7 @@ Our model classified correctly 82% of the testing set. Let's build a confusion m
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-# building a confusion matrix
+# build a confusion matrix
 confusionMatrix(table(fitted.results, test$Bestseller), positive='1')
 ```
 
@@ -593,6 +659,7 @@ Precision of the model is that of 69.2%, meaning that out of all the cases class
 Let's see what predictions our model will give for the followin recently released games:
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# apply predictive model to recently released games
 Name <- c('Red Dead Redemption 2', 'Spyro Reignited Trilogy', 'Fallout 76')
 Platform <- c('PS4', 'XOne', 'PC')
 Genre <- c('Action', 'Platform', 'Role-Playing')
@@ -604,6 +671,7 @@ newgames
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+# show model predictions for recently released games
 games.predict <- predict(model2,newdata=newgames,type='response')
 
 newgames$predict <- games.predict
@@ -641,10 +709,12 @@ Model's prediction accuracy is that of 82%, with high specificity (96.6%) and lo
 Understanding the relationship between the critic score and the global sales is important, since critic score will be one of the main predictor variables in our predictive model. The scatterplot and the fitted line show that there is a slight positive correlation, meaning that the higher the critic score the more game copies are sold.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-# Sales vs Critic Score
+# plot scatterplot of Global Sales vs Critic Score
 ggplot(aes(x=Critic_Score, y=Global_Sales), data=df) + geom_jitter(alpha=0.25) +
   scale_y_log10() + geom_smooth() + 
-  ggtitle('Critic Score vs Global Sales')
+  ggtitle('Critic Score vs Global Sales') + 
+  ylab("Global Sales (million of units)") + 
+  xlab("Critic Score")
 ```
 
 
@@ -655,11 +725,15 @@ When analyzing a game's performance it is important to take into account market 
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-# genre preferences by market 
+# plot boxplots of NA and JP sales distributions per genre 
 p1 <- ggplot(aes(x=Genre, y=NA_Sales), data=df) + geom_boxplot() + 
-  scale_y_log10()
+  scale_y_log10() + 
+  ylab("North American Sales \
+  (million of units)")
 p2 <- ggplot(aes(x=Genre, y=JP_Sales), data=df) + geom_boxplot() + 
-  scale_y_log10()
+  scale_y_log10() + 
+  ylab("Japanese Sales \
+  (million of units)")
 
 grid.arrange(p1, p2, top = textGrob('Genre preferences: North America vs Japan',gp=gpar(fontsize=16,font=1)))
 ```
@@ -671,20 +745,30 @@ Some of the best selling genres in the US (Sports and Shooter) are one of the wo
 
 Another important aspect of games market is the power of the brand name and game's developer know-how. Such classic franchises as Super Mario have been a huge success for the past two decades, creating dozens of titles for different platforms and expanding into various genres. However, even such hits can have their highs and lows, and figuring out the target audiences and their preferences for genres and platforms is important even if you are Nintendo.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=7}
+
+# generate color palette
+colourCount = length(unique(mario$Genre))
+getPalette = colorRampPalette(brewer.pal(9, 'Dark2'))
+myPalette = getPalette(colourCount)
+
+
+# plot scatterplot of Mario games year of release vs Global Sales
 p <- ggplot(aes(x=Year_of_Release, y=Global_Sales), data=mario) + 
-  geom_point(aes(text=Name, color=Genre, size=Critic_Score, alpha=0.5)) + 
+  geom_point(aes(text=Name, color=Genre, size=2, alpha=0.5)) + 
   geom_line(aes(x=Year_of_Release, y=mean_sales), 
             data=df.by_year, alpha=0.5, linetype = 'dashed') + 
   scale_x_continuous(limits=c(2001, 2016)) + 
   scale_y_log10() + 
   ggtitle('Super Mario Franchise Evolution') + 
-  theme(legend.title=element_blank())
+  theme(legend.title=element_blank()) + 
+  ylab("Global Sales (million of units)") + 
+  scale_colour_manual(values = myPalette)
 
 ggplotly(p)
 ```
 
-The graph shows all titles from Super Mario franchise released between 2000 and 2016. The colour of the dot indicates the genre, and the size of the dot is correlated with the critic score it received. The titles are ordered by year of release and the vertical axis shows the global sales they yielded. We can see which titles were more successful in terms of sales and in terms of critics reception. We can also spot that Platform and Racing genres sell better than Sports or Puzzle in case of Super Mario franchise. 
+The graph shows all titles from Super Mario franchise released between 2000 and 2016. The colour of the dot indicates the genre, and the titles are ordered by year of release and the vertical axis shows the global sales they yielded. We can see which titles were more successful in terms of sales and we can also spot that Platform and Racing genres sell better than Sports or Puzzle in case of Super Mario franchise. 
 
 ------
 
